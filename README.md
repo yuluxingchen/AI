@@ -1,4 +1,6 @@
 # AI
 手写的各种人工智能算法
 
-开发环境 python 3.10 + pycharm 
+开发环境 Python 3.10 + Pycharm 
+
+设置好环境后，点击运行即可运行
