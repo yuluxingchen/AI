@@ -1,7 +1,6 @@
 from collections import Counter
 
 import numpy as np
-from matplotlib import pyplot as plt
 from sklearn import datasets
 from sklearn.utils import shuffle
 
@@ -41,6 +40,7 @@ def predict_labels(y_train, dists, k=1):
         y_pred[i] = c.most_common(1)[0][0]
     return y_pred
 
+
 if __name__ == '__main__':
     # 导入iris数据集
     iris = datasets.load_iris()
@@ -72,4 +72,3 @@ if __name__ == '__main__':
     # 计算分类准确率
     accuracy = float(num_correct) / X_test.shape[0]
     print('KNN Accuracy: ', accuracy)
-
