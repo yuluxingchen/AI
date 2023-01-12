@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes
 from sklearn.utils import shuffle
 
@@ -118,10 +119,13 @@ def r2_score(y_test, y_pred):
 
 
 if __name__ == '__main__':
+    # 获取数据集
     diabetes = load_diabetes()
     data, target = diabetes.data, diabetes.target
+    # 将数据随机打乱
     X, y = shuffle(data, target, random_state=13)
     offset = int(X.shape[0] * 0.8)
+    # 划分训练集和验证集
     X_train, y_train = X[:offset], y[:offset]
     X_test, y_test = X[offset:], y[offset:]
     y_train = y_train.reshape((-1, 1))
@@ -131,8 +135,20 @@ if __name__ == '__main__':
     print("y_train's shape: ", y_train.shape)
     print("Y_test's shape: ", y_test.shape)
 
+    # 训练模型
     loss_his, params, grads = linearTrain(X_train, y_train, 0.001, 200000)
-    print(params)
+    # 获取损失函数值作为 y 轴
+    y_loss = loss_his
+    # 获取损失函数个数作为 x 轴
+    x_loss = range(len(loss_his))
+    # 设置轴标签
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    # 绘制损失函数曲线
+    plt.plot(x_loss, y_loss, linewidth=1, linestyle="solid", label="train loss")
+    plt.show()
+    # 预测验证集中数据的值
     y_pred = predict(X_test, params)
+    # R2系数计算
     r2 = r2_score(y_test, y_pred)
     print(r2)
