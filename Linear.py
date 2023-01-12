@@ -39,9 +39,9 @@ def linearLoss(X, y, w, b):
     # 计算均方损失
     loss = np.sum((y_hat - y) ** 2) / num_train
     # 基于均方损失对权重系数的一阶导数
-    dw = 2 * np.dot(X.T, (y_hat - y)) / num_train
+    dw = 2 * np.dot(X.T, (y_hat - y))
     # 基于均方损失对偏置的一阶导数
-    db = 2 * np.sum(y_hat - y) / num_train
+    db = np.sum(y_hat - y) / num_train
     return y_hat, loss, dw, db
 
 
