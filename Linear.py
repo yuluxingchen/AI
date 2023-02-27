@@ -33,8 +33,6 @@ def linearLoss(X, y, w, b):
 
     # 训练样本量
     num_train = X.shape[0]
-    # 训练的特征数
-    num_feature = X.shape[1]
     # 线性回归预测
     y_hat = np.dot(X, w) + b
     # 计算均方损失

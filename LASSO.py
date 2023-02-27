@@ -1,5 +1,8 @@
 # 最小绝对收缩和选择算子
 import numpy as np
+from matplotlib import pyplot as plt
+from sklearn.datasets import make_classification, load_diabetes
+from sklearn.utils import shuffle
 
 
 def sign(x):
@@ -95,3 +98,24 @@ def lasso_train(X, y, learning_rate=0.01, epochs=1000):
             'db': db
         }
     return loss_his, params, grads
+
+
+if __name__ == '__main__':
+    # 获取数据集
+    diabetes = load_diabetes()
+    data, target = diabetes.data, diabetes.target
+    # 将数据随机打乱
+    X, y = shuffle(data, target, random_state=13)
+    offset = int(X.shape[0] * 0.01)
+    # 划分训练集和验证集
+    X_train, y_train = X[:offset], y[:offset]
+    X_test, y_test = X[offset:], y[offset:]
+    y_train = y_train.reshape((-1, 1))
+    y_test = y_test.reshape((-1, 1))
+    print('X_train = ', X_train.shape)
+    print('X_test = ', X_test.shape)
+    print('y_train = ', y_train.shape)
+    print('y_test = ', y_test.shape)
+
+    loss_list, params, grads = lasso_train(X_train, y_train, 0.01, 300)
+    print(params)

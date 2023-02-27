@@ -45,9 +45,9 @@ def logisticLoss(X, y, w, b):
     # 计算交叉熵损失函数
     loss = -1 / num_train * np.sum(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
     # 基于均方损失对权重系数的一阶导数
-    dw = 2 * np.dot(X.T, (y_hat - y)) / num_train
+    dw = np.dot(X.T, (y_hat - y)) / num_train
     # 基于均方损失对偏置的一阶导数
-    db = 2 * np.sum(y_hat - y) / num_train
+    db = np.sum(y_hat - y) / num_train
     return y_hat, loss, dw, db
 
 
@@ -206,8 +206,6 @@ if __name__ == '__main__':
     print('y_test = ', y_test.shape)
 
     cost_list, params, grads = logisticTrain(X_train, y_train, 0.01, 1000)
-    print('Params : ', params)
     y_pred = predict(X_test, params)
-    print(y_pred)
     print(classification_report(y_test, y_pred))
     plot_decision_boundary(X_train, y_train, params)
