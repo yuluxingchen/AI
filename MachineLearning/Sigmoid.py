@@ -1,11 +1,16 @@
+# 对数几率回归模型
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.datasets import load_diabetes, make_classification
+from sklearn.datasets import make_classification
 from sklearn.metrics import classification_report
-from sklearn.utils import shuffle
 
 
 def sigmoid(x):
+    """
+    定义sigmoid函数
+    :param x: 输入数据
+    :return: 计算后的数据
+    """
     return 1.0 / (1 + np.exp(-x))
 
 
@@ -38,8 +43,6 @@ def logisticLoss(X, y, w, b):
 
     # 训练样本量
     num_train = X.shape[0]
-    # 训练的特征数
-    num_feature = X.shape[1]
     # 线性回归预测
     y_hat = sigmoid(np.dot(X, w) + b)
     # 计算交叉熵损失函数
@@ -48,6 +51,8 @@ def logisticLoss(X, y, w, b):
     dw = np.dot(X.T, (y_hat - y)) / num_train
     # 基于均方损失对偏置的一阶导数
     db = np.sum(y_hat - y) / num_train
+    # 压缩损失数组维度
+    loss = np.squeeze(loss)
     return y_hat, loss, dw, db
 
 
@@ -59,12 +64,12 @@ def logisticTrain(X, y, learning_rate=0.01, epochs=10000):
     :param learning_rate: 学习率
     :param epochs: 训练迭代次数
     :return:
-    loss_his: 每次迭代的均方损失 <br>
+    loss_list: 每次迭代的均方损失 <br>
     params: 优化后的参数字典 <br>
     grads: 优化后的参数梯度字典
     """
     # 记录训练损失的空列表
-    loss_his = []
+    loss_list = []
     params = []
     grads = []
     # 初始化模型参数
@@ -74,8 +79,8 @@ def logisticTrain(X, y, learning_rate=0.01, epochs=10000):
         y_hat, loss, dw, db = logisticLoss(X, y, w, b)
         w = w - learning_rate * dw
         b = b - learning_rate * db
-        loss_his.append(loss)
         if i % 100 == 0:
+            loss_list.append(loss)
             print("epoch %d loss %f" % (i, loss))
         # 将当前迭代步优化后的参数保存到字典中
         params = {
@@ -87,7 +92,7 @@ def logisticTrain(X, y, learning_rate=0.01, epochs=10000):
             'dw': dw,
             'db': db
         }
-    return loss_his, params, grads
+    return loss_list, params, grads
 
 
 def predict(X, params):

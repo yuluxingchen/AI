@@ -1,3 +1,5 @@
+# 线性回归模型
+# author: 羽路星尘
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes
@@ -15,7 +17,6 @@ def initializeParams(dims):
     w = np.zeros((dims, 1))
     b = 0
     return w, b
-
 
 def linearLoss(X, y, w, b):
     """
@@ -37,14 +38,14 @@ def linearLoss(X, y, w, b):
     y_hat = np.dot(X, w) + b
     # 计算均方损失
     loss = np.sum((y_hat - y) ** 2) / num_train
-    # 基于均方损失对权重系数的一阶导数
-    dw = 2 * np.dot(X.T, (y_hat - y))
-    # 基于均方损失对偏置的一阶导数
-    db = np.sum(y_hat - y) / num_train
+    # 基于均方损失对权重系数求一阶导数
+    dw = np.dot(X.T, (y_hat - y)) / num_train
+    # 基于均方损失对偏置求一阶导数
+    db = np.sum(y_hat - y)
     return y_hat, loss, dw, db
 
 
-def linearTrain(X, y, learning_rate=0.01, epochs=10000):
+def linearTrain(X, y, learning_rate=0.1, epochs=10000):
     """
     训练过程
     :param X: 输入变量矩阵
@@ -52,12 +53,12 @@ def linearTrain(X, y, learning_rate=0.01, epochs=10000):
     :param learning_rate: 学习率
     :param epochs: 训练迭代次数
     :return:
-    loss_his: 每次迭代的均方损失 <br>
+    loss_list: 每次迭代的均方损失 <br>
     params: 优化后的参数字典 <br>
     grads: 优化后的参数梯度字典
     """
     # 记录训练损失的空列表
-    loss_his = []
+    loss_list = []
     params = []
     grads = []
     # 初始化模型参数
@@ -67,20 +68,20 @@ def linearTrain(X, y, learning_rate=0.01, epochs=10000):
         y_hat, loss, dw, db = linearLoss(X, y, w, b)
         w += -learning_rate * dw
         b += -learning_rate * db
-        loss_his.append(loss)
+        loss_list.append(loss)
         if i % 10000 == 0:
             print("epoch %d loss %f" % (i, loss))
-        # 将当前迭代步优化后的参数保存到字典中
+        # 将当前迭代优化后的参数保存到字典中
         params = {
             'w': w,
             'b': b
         }
-        # 将当前迭代步的梯度保存到字典中
+        # 将当前迭代的梯度保存到字典中
         grads = {
             'dw': dw,
             'db': db
         }
-    return loss_his, params, grads
+    return loss_list, params, grads
 
 
 def predict(X, params):
@@ -134,11 +135,11 @@ if __name__ == '__main__':
     print("Y_test's shape: ", y_test.shape)
 
     # 训练模型
-    loss_his, params, grads = linearTrain(X_train, y_train, 0.001, 200000)
+    loss_list, params, grads = linearTrain(X_train, y_train, 0.001, 200000)
     # 获取损失函数值作为 y 轴
-    y_loss = loss_his
+    y_loss = loss_list
     # 获取损失函数个数作为 x 轴
-    x_loss = range(len(loss_his))
+    x_loss = range(len(loss_list))
     # 设置轴标签
     plt.xlabel("epoch")
     plt.ylabel("loss")

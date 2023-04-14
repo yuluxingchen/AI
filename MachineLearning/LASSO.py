@@ -1,7 +1,7 @@
 # 最小绝对收缩和选择算子
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.datasets import make_classification, load_diabetes
+from sklearn.datasets import load_diabetes
 from sklearn.utils import shuffle
 
 
@@ -24,7 +24,7 @@ def initialize_params(dims):
     初始化模型参数
     :param dims: 数据变量维数
     :return:
-    w: 权重系数值
+    w: 权重系数值 <br>
     b: 偏置参数值
     """
     w = np.zeros((dims, 1))
@@ -49,8 +49,6 @@ def l1_loss(X, y, w, b, alpha):
     vec_sign = np.vectorize(sign)
     # 训练样本量
     num_train = X.shape[0]
-    # 训练特征数
-    num_feature = X.shape[1]
     # 回归模型预测输出
     y_hat = np.dot(X, w) + b
     # L1 损失函数
@@ -69,12 +67,12 @@ def lasso_train(X, y, learning_rate=0.01, epochs=1000):
     :param learning_rate: 学习率
     :param epochs: 训练迭代次数
     :return:
-    loss_his: 每次迭代的均方损失 <br>
+    loss_list: 每次迭代的均方损失 <br>
     params: 优化后的参数字典 <br>
     grads: 优化后的参数梯度字典
     """
     # 记录训练损失的空列表
-    loss_his = []
+    loss_list = []
     params = []
     grads = []
     # 初始化模型参数
@@ -84,7 +82,7 @@ def lasso_train(X, y, learning_rate=0.01, epochs=1000):
         y_hat, loss, dw, db = l1_loss(X, y, w, b, 0.1)
         w = w - learning_rate * dw
         b = b - learning_rate * db
-        loss_his.append(loss)
+        loss_list.append(loss)
         if i % 50 == 0:
             print("epoch %d loss %f" % (i, loss))
         # 将当前迭代步优化后的参数保存到字典中
@@ -97,7 +95,7 @@ def lasso_train(X, y, learning_rate=0.01, epochs=1000):
             'dw': dw,
             'db': db
         }
-    return loss_his, params, grads
+    return loss_list, params, grads
 
 
 if __name__ == '__main__':
@@ -117,5 +115,14 @@ if __name__ == '__main__':
     print('y_train = ', y_train.shape)
     print('y_test = ', y_test.shape)
 
-    loss_list, params, grads = lasso_train(X_train, y_train, 0.01, 300)
-    print(params)
+    loss_list, params, grads = lasso_train(X_train, y_train, 0.1, 3000)
+    # 获取损失函数值作为 y 轴
+    y_loss = loss_list
+    # 获取损失函数个数作为 x 轴
+    x_loss = range(len(loss_list))
+    # 设置轴标签
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    # 绘制损失函数曲线
+    plt.plot(x_loss, y_loss, linewidth=1, linestyle="solid", label="train loss")
+    plt.show()
