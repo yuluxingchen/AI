@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 from gym.envs.toy_text import discrete
 
@@ -36,8 +37,10 @@ class GridworldEnv(discrete.DiscreteEnv):
         while not iter.finished:
             s = iter.iterindex
             y, x = iter.multi_index
+            # 每一个动作的转移概率，下一个位置，回报，是否到达宝藏区
             P[s] = {a: [] for a in range(self.nA)}
             is_done = lambda s: s == done_location
+            # 判断是否到达宝藏区
             if is_done(s):
                 reward = 0.0
                 for i in range(self.nA):
@@ -56,7 +59,7 @@ class GridworldEnv(discrete.DiscreteEnv):
             iter.iternext()
         isd = np.ones(self.nS) / self.nS
         self.P = P
-        super(GridworldEnv, self).__init__(self.nS, self.nA, P, isd)
+        super(GridworldEnv, self).__init__(self.nS, self.nA, self.P, isd)
 
 
 # 根据传入的四个行为选择值函数最大的索引，返回的是一个索引数组和一个行为策略
@@ -72,29 +75,36 @@ def get_max_index(action_values):
     return indexs, policy_arr
 
 
+# 策略评估
 def policy_eval(policy, env, discount_factor=1, threshold=0.00001):
+    # 初始化各状态的状态值函数
     V = np.zeros(env.nS)
     i = 0
     while True:
         value_delta = 0
+        # 遍历各状态
         for s in range(env.nS):
             v = 0
+            # 遍历行为概率
             for a, action_prob in enumerate(policy[s]):
                 for prob, next_state, reward, done in env.P[s][a]:
+                    # 状态值=sum(行为概率*转移概率*（当前状态回报 + 折算值*下一状态回报）)
                     v += action_prob * prob * (reward + discount_factor * V[next_state])
+            # 求各状态和上一次求得状态的最大差值
             value_delta = max(value_delta, np.abs(v - V[s]))
             V[s] = v
         i += 1
+        # 当前循环得出的各状态和上一次状态的最大差值小于阈值，则收敛，停止运算
         if value_delta < threshold:
             break
     return np.array(V)
 
 
+# 策略改进
 def policy_improvement(env, policy_eval_fn=policy_eval, discount_factor=1):
     policy = np.ones([env.nS, env.nA]) / env.nA
-    global i_num
-    global v_num
-    i_num = 0
+
+    i_num = 1
     v_num = 1
     while True:
         V = policy_eval_fn(policy, env, discount_factor)
@@ -113,13 +123,13 @@ def policy_improvement(env, policy_eval_fn=policy_eval, discount_factor=1):
             policy[s] = policy_arr
         i_num = i_num + 1
         if policy_stable:
-            print(i_num)
             return policy, V
 
 
 def value_iteration(env, threshold=0.0001, discount_factor=1):
     global i_num
     i_num = 0
+
     def one_step_lookahead(state, V):
         q = np.zeros(env.nA)
         for a in range(env.nA):
@@ -139,7 +149,6 @@ def value_iteration(env, threshold=0.0001, discount_factor=1):
         i_num += 1
         if delta < threshold:
             break
-    print(i_num)
     policy = np.zeros([env.nS, env.nA])
 
     for s in range(env.nS):
@@ -149,6 +158,7 @@ def value_iteration(env, threshold=0.0001, discount_factor=1):
     return policy, V
 
 
+# 将策略中的每行可能行为改成元组形式，方便对多个方向的表示
 def change_policy(policys):
     action_tuple = []
     for policy in policys:
@@ -158,14 +168,11 @@ def change_policy(policys):
 
 
 if __name__ == '__main__':
-    env = GridworldEnv()
-    policy, v = policy_improvement(env)
-    policy1, v1 = value_iteration(env)
-    update_policy_type = change_policy(policy)
-    update_policy_type1 = change_policy(policy1)
-    print(policy)
-    print(policy1)
-    print(v)
-    print(v1)
-    print(update_policy_type)
-    print(update_policy_type1)
+    # env = GridworldEnv()
+    env = gym.make('CartPole-v0')
+    env.render()
+    # policy, v = policy_improvement(env)
+    # policy1, v1 = value_iteration(env)
+    # update_policy_type = change_policy(policy)
+    # update_policy_type1 = change_policy(policy1)
+
