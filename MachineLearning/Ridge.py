@@ -1,7 +1,7 @@
 # 岭回归
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_diabetes, make_regression
 from sklearn.utils import shuffle
 
 
@@ -35,8 +35,6 @@ def l2_loss(X, y, w, b, alpha):
 
     # 训练样本量
     num_train = X.shape[0]
-    # 训练特征数
-    num_feature = X.shape[1]
     # 回归模型预测输出
     y_hat = np.dot(X, w) + b
     # L2 损失函数
@@ -86,13 +84,27 @@ def ridge_train(X, y, learning_rate=0.01, epochs=1000):
     return loss_his, params, grads
 
 
+def predict(X, params):
+    """
+    预测函数
+    :param X: 测试集
+    :param params: 模型训练参数
+    :return: y_pred: 模型预测结果
+    """
+    # 获取模型参数
+    w = params['w']
+    b = params['b']
+    # 预测
+    y_pred = np.dot(X, w) + b
+    return y_pred
+
+
 if __name__ == '__main__':
     # 获取数据集
-    diabetes = load_diabetes()
-    data, target = diabetes.data, diabetes.target
+    X, y = make_regression(n_features=1, noise=10, random_state=8)
     # 将数据随机打乱
-    X, y = shuffle(data, target, random_state=13)
-    offset = int(X.shape[0] * 0.01)
+    X, y = shuffle(X, y, random_state=13)
+    offset = int(X.shape[0] * 0.8)
     # 划分训练集和验证集
     X_train, y_train = X[:offset], y[:offset]
     X_test, y_test = X[offset:], y[offset:]
@@ -103,7 +115,7 @@ if __name__ == '__main__':
     print('y_train = ', y_train.shape)
     print('y_test = ', y_test.shape)
 
-    loss_list, params, grads = ridge_train(X_train, y_train, 0.1, 3000)
+    loss_list, params, grads = ridge_train(X_train, y_train, 0.01, 700)
     # 获取损失函数值作为 y 轴
     y_loss = loss_list
     # 获取损失函数个数作为 x 轴
@@ -113,4 +125,23 @@ if __name__ == '__main__':
     plt.ylabel("loss")
     # 绘制损失函数曲线
     plt.plot(x_loss, y_loss, linewidth=1, linestyle="solid", label="train loss")
+    plt.show()
+
+    # 预测训练集中的数据的值
+    y_pred0 = predict(X_train, params)
+    # 预测验证集中数据的值
+    y_pred = predict(X_test, params)
+
+    plt.xlabel("X")
+    plt.ylabel("Y", rotation=0)
+    plt.title("Train Dataset")
+    plt.scatter(X_train, y_train)
+    plt.plot(X_train, y_pred0)
+    plt.show()
+
+    plt.xlabel("X")
+    plt.ylabel("Y", rotation=0)
+    plt.title("Predict Dataset")
+    plt.scatter(X_test, y_test)
+    plt.plot(X_test, y_pred)
     plt.show()

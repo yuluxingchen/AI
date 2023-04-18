@@ -1,5 +1,6 @@
 # 线性判别分析算法
 import numpy as np
+from matplotlib import pyplot as plt
 from sklearn import datasets
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -67,13 +68,20 @@ if __name__ == '__main__':
     X = X[y != 2]
     y = y[y != 2]
     # 划分训练集和测试集
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=41)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=41)
     # 创建LDA模型实例
     lda = LDA()
     # LDA模型拟合
     lda.fit(X_train, y_train)
     # LDA模型预测
     y_pred = lda.predict(X_test)
+    print(y_pred)
     # 测试集上的分类准确率
     acc = accuracy_score(y_test, y_pred)
     print("Accuracy of Numpy LDA:", acc)
+    colors = ['navy', 'turquoise', 'darkorange']
+    # # 绘制不同的类别
+    for c, i, target_name in zip(colors, [0, 1], data.target_names):
+        plt.scatter(X_test[:, 0], X_test[:, 1], color=c, lw=2, label=target_name)
+    plt.legend()
+    plt.show()
