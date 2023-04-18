@@ -2,7 +2,7 @@
 # author: 羽路星尘
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import make_regression
 from sklearn.utils import shuffle
 
 
@@ -17,6 +17,7 @@ def initializeParams(dims):
     w = np.zeros((dims, 1))
     b = 0
     return w, b
+
 
 def linearLoss(X, y, w, b):
     """
@@ -69,7 +70,7 @@ def linearTrain(X, y, learning_rate=0.1, epochs=10000):
         w += -learning_rate * dw
         b += -learning_rate * db
         loss_list.append(loss)
-        if i % 10000 == 0:
+        if i % 1000 == 0:
             print("epoch %d loss %f" % (i, loss))
         # 将当前迭代优化后的参数保存到字典中
         params = {
@@ -101,16 +102,17 @@ def predict(X, params):
 
 def r2_score(y_test, y_pred):
     """
-    R2系数函数
+    R2系数函数，R2系数表示了因变量能通过回归关系被自变量解释的比例
     :param y_test: 测试集标签
     :param y_pred: 测试集预测值
     :return: r2: R2系数
     """
     # 标签均值
     y_avg = np.mean(y_test)
-    # 总离差平方和
+    # 估计值与平均值的误差
     ss_tot = np.sum((y_test - y_avg) ** 2)
-    # 残差平方和
+    # 估计值与真实值的误差
+
     ss_res = np.sum((y_test - y_pred) ** 2)
     # R2计算
     r2 = 1 - (ss_res / ss_tot)
@@ -119,10 +121,14 @@ def r2_score(y_test, y_pred):
 
 if __name__ == '__main__':
     # 获取数据集
-    diabetes = load_diabetes()
-    data, target = diabetes.data, diabetes.target
-    # 将数据随机打乱
-    X, y = shuffle(data, target, random_state=13)
+    X, y = make_regression(n_features=1, noise=10, random_state=8)
+    plt.xlabel("X")
+    plt.ylabel("Y", rotation=0)
+    plt.title("Dataset")
+    plt.scatter(X, y)
+    plt.show()
+
+    X, y = shuffle(X, y, random_state=13)
     offset = int(X.shape[0] * 0.8)
     # 划分训练集和验证集
     X_train, y_train = X[:offset], y[:offset]
@@ -135,7 +141,7 @@ if __name__ == '__main__':
     print("Y_test's shape: ", y_test.shape)
 
     # 训练模型
-    loss_list, params, grads = linearTrain(X_train, y_train, 0.001, 200000)
+    loss_list, params, grads = linearTrain(X_train, y_train, 0.001, 15000)
     # 获取损失函数值作为 y 轴
     y_loss = loss_list
     # 获取损失函数个数作为 x 轴
@@ -146,8 +152,25 @@ if __name__ == '__main__':
     # 绘制损失函数曲线
     plt.plot(x_loss, y_loss, linewidth=1, linestyle="solid", label="train loss")
     plt.show()
+
+    # 预测训练集中的数据的值
+    y_pred0 = predict(X_train, params)
     # 预测验证集中数据的值
     y_pred = predict(X_test, params)
     # R2系数计算
     r2 = r2_score(y_test, y_pred)
     print(r2)
+
+    plt.xlabel("X")
+    plt.ylabel("Y", rotation=0)
+    plt.title("Train Dataset")
+    plt.scatter(X_train, y_train)
+    plt.plot(X_train, y_pred0)
+    plt.show()
+
+    plt.xlabel("X")
+    plt.ylabel("Y", rotation=0)
+    plt.title("Predict Dataset")
+    plt.scatter(X_test, y_test)
+    plt.plot(X_test, y_pred)
+    plt.show()

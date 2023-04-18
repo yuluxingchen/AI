@@ -52,7 +52,7 @@ def l1_loss(X, y, w, b, alpha):
     # 回归模型预测输出
     y_hat = np.dot(X, w) + b
     # L1 损失函数
-    loss = np.sum((y_hat - y) ** 2) / num_train + np.sum(alpha * abs(w))
+    loss = np.sum((y_hat - y) ** 2) / num_train + alpha * np.sum(abs(w))
     # 基于向量化符号函数的参数梯度计算
     dw = np.dot(X.T, (y_hat - y)) / num_train + alpha * vec_sign(w)
     db = np.sum((y_hat - y)) / num_train

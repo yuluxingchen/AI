@@ -1,6 +1,20 @@
 # 3代迭代二叉树
 import pandas as pd
-from sklearn.metrics.cluster import entropy
+from math import log
+from sklearn.datasets import load_wine
+
+
+def entropy(list):
+    """
+    信息熵计算函数
+    :param list: 包含类别取值的列表
+    :return: 信息熵值
+    """
+    # 计算列表中取值的概率分布
+    probs = [list.count(i) / len(list) for i in set(list)]
+    # 计算信息熵
+    entropy = -sum([prob * log(prob, 2) for prob in probs])
+    return entropy
 
 
 def df_split(df, col):
@@ -35,8 +49,7 @@ def choose_best_feature(df, label):
     # 特征集
     cols = [col for col in df.columns if col not in [label]]
     # 初始化最大信息增益值、最优特征和划分后的数据集
-    max_value, best_feature = -999, None
-    max_splited = None
+    max_value, best_feature, max_splited = -999, None, None
     # 遍历特征并根据特征取值进行划分
     for col in cols:
         # 根据当前特征划分后的数据集
@@ -96,6 +109,12 @@ class ID3Tree:
         # 递归地构造决策树
         for splited_value, splited_data in max_splited.items():
             self.construct(node, splited_value, splited_data, new_columns)
+
+    def show(self):
+        print(self.root.name)
+        for i in self.root.connections:
+            print(i)
+
 
 if __name__ == '__main__':
     pass
