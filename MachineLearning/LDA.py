@@ -56,7 +56,7 @@ class LDA:
             h = x_i.dot(self.w)
             y = 1 * (h < 0)
             y_pred.append(y)
-        return y_pred
+        return np.array(y_pred)
 
 
 if __name__ == '__main__':
@@ -75,13 +75,20 @@ if __name__ == '__main__':
     lda.fit(X_train, y_train)
     # LDA模型预测
     y_pred = lda.predict(X_test)
-    print(y_pred)
     # 测试集上的分类准确率
     acc = accuracy_score(y_test, y_pred)
     print("Accuracy of Numpy LDA:", acc)
     colors = ['navy', 'turquoise', 'darkorange']
     # # 绘制不同的类别
     for c, i, target_name in zip(colors, [0, 1], data.target_names):
-        plt.scatter(X_test[:, 0], X_test[:, 1], color=c, lw=2, label=target_name)
+        plt.scatter(X_test[y_pred == i, 0], X_test[y_pred == i, 1], color=c, lw=2, label=target_name)
     plt.legend()
+    plt.title("Predict")
+    plt.show()
+
+    # # 绘制不同的类别
+    for c, i, target_name in zip(colors, [0, 1], data.target_names):
+        plt.scatter(X_test[y_test == i, 0], X_test[y_test == i, 1], color=c, lw=2, label=target_name)
+    plt.legend()
+    plt.title("Test")
     plt.show()
