@@ -11,8 +11,10 @@ def sigmoid(x):
 
 
 def initialize_parameters(input_dim, output_dim):
+    np.random.seed(3)
     w = np.random.normal(size=(output_dim, input_dim))
     b = np.random.normal(size=(output_dim, 1))
+    # b = np.zeros((output_dim, 1))
     return w, b
 
 
@@ -45,17 +47,21 @@ class MLP:
         return X
 
     def backward_propagation(self, X, Y):
+        last_dw = 1
         grads = [[] for _ in range(len(self.cache))]
         for i in range(len(self.cache) - 1, 0, -1):
             m = X.shape[0]
             x, a = self.cache[i]
             w, b = self.layer_parameters[i]
             if i == len(self.cache) - 1:
-                diff = np.dot(Y, (a - Y) * x * (1 - x))
+                dw = 1/m * np.dot(x.T, (a - Y))
+                db = 1/m * np.sum((a - Y), axis=0, keepdims=True)
+                last_dw = 1/m * (a - Y)
             else:
-                diff = np.dot(x, np.dot(a - Y, w.T) * a * (1 - a))
-            dw = 1 / m * np.dot(x.T, a)
-            db = 1 / m * np.sum(diff, axis=0, keepdims=True)
+                last_dw = np.dot(last_dw, w)
+                dw = np.dot(x.T, last_dw)
+                db = np.dot(last_dw)
+            # print(dw, db)
             grads[i] = [dw, db]
         return grads
 
@@ -63,18 +69,18 @@ class MLP:
         for index in range(len(self.layer_parameters) - 1, 0, -1):
             w, b = self.layer_parameters[index]
             dw, db = grads[index]
-            w += dw.T * learning_rate
-            b += db.T * learning_rate
+            w -= learning_rate * dw.T
+            b -= learning_rate * db.T
             self.layer_parameters[index] = [w, b]
 
-    def train(self, X, Y, learning_rate=0.5, epochs=100):
+    def train(self, X, Y, learning_rate=1.2, epochs=100):
         for i in range(epochs):
             A = self.forward_propagation(X)
             loss = cost(A, Y)
             grads = self.backward_propagation(X, Y)
             self.update_parameters(grads, learning_rate)
-            if i % 100 == 0:
-                print("Cost after iteration %i:%f" % (i, loss))
+            if (i + 1) % 100 == 0:
+                print("Cost after iteration %i:%f" % ((i + 1), loss))
 
 
 # 生成非线性可分数据集
@@ -111,5 +117,5 @@ def create_dataset():
 
 if __name__ == '__main__':
     X, Y = create_dataset()
-    mlp = MLP(X.shape[1], 10, Y.shape[1])
+    mlp = MLP(X.shape[1], 2, Y.shape[1])
     mlp.train(X, Y, learning_rate=0.5, epochs=10000)
