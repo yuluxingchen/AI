@@ -54,8 +54,8 @@ class MLP:
             x, a = self.cache[i]
             w, b = self.layer_parameters[i]
             if i == len(self.cache) - 1:
-                dw = 1/m * np.dot(x.T, (a - Y))
-                db = 1/m * np.sum((a - Y), axis=0, keepdims=True)
+                dw = 1/m * np.dot(x.T, (a - Y) * a * (1 - a))
+                db = 1/m * np.sum((a - Y) * a * (1 - a), axis=0, keepdims=True)
                 last_dw = 1/m * (a - Y)
             else:
                 last_dw = np.dot(last_dw, w)
