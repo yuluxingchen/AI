@@ -60,9 +60,9 @@ class MLP:
                 db = 1/m * np.sum((a - Y), axis=0, keepdims=True)
                 last_dw = 1/m * (a - Y) * w
             else:
-                dw = np.dot(x.T, last_dw)
-                db = np.sum(last_dw, axis=0, keepdims=True)
-                last_dw = last_dw * w
+                dw = np.dot(x.T, last_dw * a * (1 - a))
+                db = np.sum(last_dw * a * (1 - a), axis=0, keepdims=True)
+                last_dw = last_dw * w * a * (1 - a)
             grads[i] = [dw, db]
         return grads
 
