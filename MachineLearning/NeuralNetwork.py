@@ -183,8 +183,8 @@ def nn_model(X, Y, n_h, num_iterations=10000, print_cost=False):
         # 参数更新
         parameters = update_parameters(parameters, grads, learning_rate=1.2)
         # 打印损失
-        if print_cost and i % 1000 == 0:
-            print("Cost after iteration %i: %f" % (i, cost))
+        if print_cost and (i+1) % 1000 == 0 or i == 0:
+            print("Cost after iteration %i: %f" % (i+1, cost))
     return parameters
 
 

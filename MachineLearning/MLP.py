@@ -14,7 +14,6 @@ def initialize_parameters(input_dim, output_dim):
     np.random.seed(3)
     w = np.random.normal(size=(output_dim, input_dim))
     b = np.random.normal(size=(output_dim, 1))
-    # b = np.zeros((output_dim, 1))
     return w, b
 
 
@@ -41,7 +40,10 @@ class MLP:
     def forward_propagation(self, X):
         for index in range(len(self.layer_parameters)):
             w, b = self.layer_parameters[index]
-            A = sigmoid(np.dot(X, w.T) + b.T)
+            if index != len(self.layer_parameters) - 1:
+                A = np.tanh(np.dot(X, w.T) + b.T)
+            else:
+                A = sigmoid(np.dot(X, w.T) + b.T)
             self.cache[index] = [X, A]
             X = A
         return X
@@ -54,14 +56,13 @@ class MLP:
             x, a = self.cache[i]
             w, b = self.layer_parameters[i]
             if i == len(self.cache) - 1:
-                dw = 1/m * np.dot(x.T, (a - Y) * a * (1 - a))
-                db = 1/m * np.sum((a - Y) * a * (1 - a), axis=0, keepdims=True)
-                last_dw = 1/m * (a - Y) * a * (1 - a)
+                dw = 1/m * np.dot(x.T, (a - Y))
+                db = 1/m * np.sum((a - Y), axis=0, keepdims=True)
+                last_dw = 1/m * (a - Y) * w
             else:
-                last_dw = np.dot(last_dw, w)
                 dw = np.dot(x.T, last_dw)
-                db = np.dot(last_dw)
-            # print(dw, db)
+                db = np.sum(last_dw, axis=0, keepdims=True)
+                last_dw = last_dw * w
             grads[i] = [dw, db]
         return grads
 
@@ -73,7 +74,7 @@ class MLP:
             b -= learning_rate * db.T
             self.layer_parameters[index] = [w, b]
 
-    def train(self, X, Y, learning_rate=1.2, epochs=100):
+    def train(self, X, Y, learning_rate=0.5, epochs=100):
         for i in range(epochs):
             A = self.forward_propagation(X)
             loss = cost(A, Y)
@@ -106,9 +107,7 @@ def create_dataset():
     # 遍历生成数据
     for j in range(2):
         ix = range(N * j, N * (j + 1))
-        # theta
         t = np.linspace(j * 3.12, (j + 1) * 3.12, N) + np.random.randn(N) * 0.2
-        # radius
         r = a * np.sin(4 * t) + np.random.randn(N) * 0.2
         X[ix] = np.c_[r * np.sin(t), r * np.cos(t)]
         Y[ix] = j
@@ -117,5 +116,5 @@ def create_dataset():
 
 if __name__ == '__main__':
     X, Y = create_dataset()
-    mlp = MLP(X.shape[1], 2, Y.shape[1])
-    mlp.train(X, Y, learning_rate=0.5, epochs=10000)
+    mlp = MLP(X.shape[1], 4, Y.shape[1], layer=2)
+    mlp.train(X, Y, learning_rate=1.2, epochs=1000)
