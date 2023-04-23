@@ -56,7 +56,7 @@ class MLP:
             if i == len(self.cache) - 1:
                 dw = 1/m * np.dot(x.T, (a - Y) * a * (1 - a))
                 db = 1/m * np.sum((a - Y) * a * (1 - a), axis=0, keepdims=True)
-                last_dw = 1/m * (a - Y)
+                last_dw = 1/m * (a - Y) * a * (1 - a)
             else:
                 last_dw = np.dot(last_dw, w)
                 dw = np.dot(x.T, last_dw)
