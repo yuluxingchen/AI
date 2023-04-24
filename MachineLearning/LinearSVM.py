@@ -9,9 +9,11 @@ from sklearn.model_selection import train_test_split
 
 # 线性可分支持向量机
 class LinearSVM:
-    def __init__(self, learning_rate=0.01, epochs=1000):
+    def __init__(self, learning_rate=0.01, lambda_param=1, epochs=1000):
         # 学习率
         self.learning_rate = learning_rate
+        # α系数
+        self.lambda_param = lambda_param
         # 训练轮数
         self.epochs = epochs
         # 权重
@@ -34,8 +36,8 @@ class LinearSVM:
             for index in range(X.shape[0]):
                 # 如果分类不正确则更新 w，b
                 if y[index] * (np.dot(X[index], self.w) + self.b) <= 0:
-                    self.w -= self.learning_rate * (self.w - X[index] * y[index])
-                    self.b -= self.learning_rate * y[index]
+                    self.w -= self.learning_rate * (self.lambda_param * self.w - X[index] * y[index])
+                    self.b -= self.learning_rate * self.lambda_param * y[index]
             loss = y[y != self.predict(X)].shape[0]
             # 存储损失函数
             self.loss.append(loss)
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     # 划分训练集和测试集
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=43)
     # 创建线性可分支持向量机模型
-    svm = LinearSVM(0.01, 1000)
+    svm = LinearSVM(0.01, 1, 1000)
     # 对训练集进行拟合
     svm.train(X_train, y_train)
     y_predict = svm.predict(X_test)
