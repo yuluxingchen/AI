@@ -72,11 +72,6 @@ if __name__ == '__main__':
     plt.ylabel("loss")
     plt.show()
 
-    # 设置颜色参数
-    colors = {-1: 'r', 1: 'g'}
-    # 绘制二分类测试集的预测结果的散点图
-    plt.scatter(X_test[:, 0], X_test[:, 1], marker='o', c=pd.Series(y_predict).map(colors))
-
     # 获取测试集最大值和最小值坐标
     x_min, x_max = X_test[:, 0].min() - 0.5, X_test[:, 0].max() + 0.5
     y_min, y_max = X_test[:, 1].min() - 0.5, X_test[:, 1].max() + 0.5
@@ -87,12 +82,14 @@ if __name__ == '__main__':
     Z = svm.predict(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
     # 绘制边界线
-    plt.contour(xx, yy, Z, colors='blue', levels=[-1, 0, 1], alpha=0.5,
+    plt.contourf(xx, yy, Z, levels=[-1, 0, 1], alpha=0.5,
                 linestyles=['--', '-', '--'])
+    # 绘制二分类测试集的预测结果的散点图
+    plt.scatter(X_test[:, 0], X_test[:, 1], marker='o', c=pd.Series(y_predict))
     plt.show()
 
     # 绘制二分类测试集的真实结果的散点图
-    plt.scatter(X_test[:, 0], X_test[:, 1], marker='o', c=pd.Series(y_test).map(colors))
+    plt.scatter(X_test[:, 0], X_test[:, 1], marker='o', c=pd.Series(y_test))
     plt.show()
 
 
