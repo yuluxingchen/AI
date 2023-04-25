@@ -5,18 +5,19 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 
-class CARTTree:
-    class TreeNode:
-        def __init__(self, feature=None, value=None, result=None):
-            # 特征编号
-            self.feature = feature
-            # 特征取值
-            self.value = value
-            # 如果是叶子节点，代表分类结果
-            self.result = result
-            # 子节点
-            self.son = {}
+class TreeNode:
+    def __init__(self, feature=None, value=None, result=None):
+        # 特征编号
+        self.feature = feature
+        # 特征取值
+        self.value = value
+        # 如果是叶子节点，代表分类结果
+        self.result = result
+        # 子节点
+        self.son = {}
 
+
+class CARTTree:
     def __init__(self):
         self.root = None
 
@@ -43,8 +44,7 @@ class CARTTree:
                 left_y.append(y[i])
             else:
                 right_y.append(y[i])
-        new_gini = float(len(left_y)) / count * self.gini_index(left_y) + \
-                   float(len(right_y)) / count * self.gini_index(right_y)
+        new_gini = float(len(left_y)) / count * self.gini_index(left_y) + float(len(right_y)) / count * self.gini_index(right_y)
         return new_gini
 
     def choose_best_feature(self, X, y):
@@ -74,14 +74,14 @@ class CARTTree:
         """
         # 如果样本中所有类别相同，则直接返回
         if len(set(y)) == 1:
-            return self.TreeNode(result=y[0])
+            return TreeNode(result=y[0])
         # 如果没有特征可用，则选择出现最多的结果作为分类结果
         if len(X[0]) == 0:
-            return self.TreeNode(result=max(y, key=y.count))
+            return TreeNode(result=max(y, key=y.count))
         # 选择基尼指数最大的特征作为分割点
-        feature, value, gini= self.choose_best_feature(X, y)
+        feature, value, gini = self.choose_best_feature(X, y)
         # 以此特征作为特征根建立特征树
-        root = self.TreeNode(feature=feature, value=value)
+        root = TreeNode(feature=feature, value=value)
         # 建立左子树
         index = np.where(X[:, feature] <= value)[0]
         root.son["left"] = self.construct(X[index], y[index])
