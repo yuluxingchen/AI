@@ -2,63 +2,69 @@ import numpy as np
 from keras.datasets import mnist
 
 
-# TODO: 程序需要进一步修改。现在存在训练速度慢、无法批量训练、训练时容易出现梯度爆炸或消失、loss无法收敛等问题
+# TODO: 程序需要进一步修改。现在存在训练速度慢、模型精度差等问题
 
 class Convolution:
-    def __init__(self, filter_size=3, filters_num=5):
+    def __init__(self, kernel_size=(3, 3), kernel_num=5):
         # 卷积核大小
-        self.filter_size = filter_size
+        self.kernel_size = kernel_size
         # 卷积核数量
-        self.filter_num = filters_num
+        self.kernel_num = kernel_num
         # 卷结核矩阵
-        self.filters = np.random.normal(size=(self.filter_num, self.filter_size, self.filter_size)) / (filter_size ** 2)
+        self.kernels = np.random.normal(size=(kernel_num, *kernel_size, 1))
+        # 偏置矩阵
+        self.bias = np.zeros((kernel_num,))
         # 保存输入结果
         self.last_input = None
 
     def forward(self, input):
-        assert input.ndim == 2
-        # 获取输入的高度、宽度
-        height, width = input.shape
-        # 初始化输出为0
-        output_height = height - self.filter_size + 1
-        output_width = width - self.filter_size + 1
-        output = np.zeros((output_height, output_width, self.filter_num))
-        # 卷积核层级移动
-        for f in range(self.filter_num):
-            # 卷积核垂直移动
-            for h in range(output_height):
-                # 卷积核水平移动
-                for w in range(output_width):
-                    # 对相应部分进行卷积计算
-                    output[h, w, f] = np.sum(
-                        input[h: h + self.filter_size, w: w + self.filter_size] * self.filters[f])
-
         # 保存输入以便于进行反向传播计算
         self.last_input = input
+        # 获取输入的批量大小、高度、宽度、通道数
+        batch_size, height, width, channels = input.shape
+        # 初始化输出为0
+        output_height = height - self.kernel_size[0] + 1
+        output_width = width - self.kernel_size[0] + 1
+        output = np.zeros((batch_size, output_height, output_width, self.kernel_num))
+        # 卷积核垂直移动
+        for h in range(output_height):
+            # 卷积核水平移动
+            for w in range(output_width):
+                # 卷积核层级移动
+                for k in range(self.kernel_num):
+                    # 对相应部分进行卷积计算
+                    output[:, h, w, k] = np.sum(
+                        input[:, h: h + self.kernel_size[0], w: w + self.kernel_size[1], :] * self.kernels[k],
+                        axis=(1, 2, 3)) + self.bias[k]
         return output
 
     def backward(self, output_grad, learning_rate):
-        # 获得上一个输入的高度、宽度和通道数
-        height, width = self.last_input.shape
+        # 获得上一个输入的批量大小、高度、宽度、通道数
+        batch_size, height, width, channels = self.last_input.shape
         # 临时存储反向传播计算出的卷积核
-        filter_grad = np.zeros(self.filters.shape)
+        kernels_grad = np.zeros_like(self.kernels)
+        # 临时存储反向传播计算出的偏置
+        bias_grad = np.sum(output_grad, axis=(0, 1, 2))
         # 临时存储反向传播计算出的损失函数对此输入的导数，即 dl/dy * dy/dx，用作下一层反向传播的输入
-        input_grad = np.zeros(self.last_input.shape)
-        for f in range(self.filter_num):
-            for h in range(height - self.filter_size + 1):
-                for w in range(width - self.filter_size + 1):
+        input_grad = np.zeros_like(self.last_input)
+        output_height = height - self.kernel_size[0] + 1
+        output_width = width - self.kernel_size[0] + 1
+
+        for h in range(output_height):
+            for w in range(output_width):
+                for f in range(self.kernel_num):
                     # 提取输入每一次被卷积的部分
-                    im_region = self.last_input[h:h + self.filter_size, w:w + self.filter_size]
+                    im_region = self.last_input[:, h:h + self.kernel_size[0], w:w + self.kernel_size[1], :]
                     # y = wx, dy/dw = x, dl/dy * dy/dw = dl/dy * x, 因此将输出的梯度乘以输入得到卷积核梯度
-                    filter_grad[f] += output_grad[h, w, f] * im_region
+                    kernels_grad[f] += np.sum(
+                        im_region * (output_grad[:, h, w, f])[:, np.newaxis, np.newaxis, np.newaxis])
                     # y = wx, dy/dx = w, dl/dy * dy/dx = dl/dy * w, 因此将输出的梯度乘以卷积核得到输入梯度
-                    input_grad[h:h + self.filter_size, w:w + self.filter_size] += output_grad[h, w, f] * \
-                                                                                  self.filters[f]
+                    input_grad[:, h:h + self.kernel_size[0], w:w + self.kernel_size[1], :] += self.kernels[f] * (output_grad[:, h, w, f])[:, np.newaxis, np.newaxis, np.newaxis]
 
         # 根据学习率进行卷积核更新
-        self.filters -= learning_rate * filter_grad
+        self.kernels -= learning_rate * kernels_grad
+        self.bias -= learning_rate * bias_grad
         return input_grad
-
 
 class ReLU:
     def __init__(self):
@@ -70,7 +76,7 @@ class ReLU:
         return np.maximum(0, input)
 
     def backward(self, output_grad, learning_rate):
-        input_grad = output_grad.copy()
+        input_grad = output_grad
         # 输入小于0的部分梯度将被置为0
         input_grad[self.last_input < 0] = 0
         return input_grad
@@ -83,24 +89,24 @@ class Flattening:
     def forward(self, input):
         # 保存输入的形状便于反向传播时进行转换
         self.last_input_shape = input.shape
-        height, width, channel = input.shape
-        # 将三维张量转换为一维向量
-        return input.reshape(height * width * channel)
+        # 将四维张量转换为二维向量
+        return input.reshape(input.shape[0], -1)
 
     def backward(self, output_grad, learning_rate):
-        height, width, channel = self.last_input_shape
-        # 将一维向量转换回三维张量
-        return output_grad.reshape(height, width, channel)
+        # 将二维向量转换回四维张量
+        return output_grad.reshape(self.last_input_shape)
 
 
 class FullyConnected:
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, units):
         # 初始化 w, b
-        self.w = np.random.normal(size=(input_dim, output_dim)) / input_dim
-        self.b = np.zeros(output_dim)
+        self.w = None
+        self.b = np.zeros(units)
+        self.units = units
         self.last_input = None
 
     def forward(self, input):
+        self.w = np.random.normal(size=(input.shape[-1], self.units)) / input.shape[-1]
         self.last_input = input
         # 计算全连接层输出
         return np.dot(input, self.w) + self.b
@@ -109,7 +115,7 @@ class FullyConnected:
         # 计算输入的梯度
         input_grad = np.dot(output_grad, self.w.T)
         # 更新 w, b
-        self.w -= learning_rate * np.dot(self.last_input.reshape(1, -1).T, output_grad.reshape(1, -1))
+        self.w -= learning_rate * np.dot(self.last_input.T, output_grad)
         self.b -= learning_rate * np.sum(output_grad, axis=0)
         return input_grad
 
@@ -156,59 +162,82 @@ class CNN:
             input_grad = layer.backward(input_grad, learning_rate)
 
     # 训练模型
-    def train(self, X_train, Y_train, epochs, learning_rate):
+    def train(self, X_train, y_train, epochs, batch_size, learning_rate):
+        num_batches = len(X_train) // batch_size
         for epoch in range(epochs):
-            loss = 0
-            for i in range(len(X_train)):
-                # 前向传播
-                y_pred = self.forward(X_train[i])
-                # 计算交叉熵损失
-                if y_pred[Y_train[i]] != 0:
-                    loss += -np.log(y_pred[Y_train[i]])
-                # 反向传播
-                output_grad = np.zeros(len(set(Y_train)))
-                output_grad[Y_train[i]] = 1
-                # 将交叉熵损失函数的导数传入反向传播
-                self.backward(y_pred - output_grad, learning_rate)
-            print("Epoch %d loss: %.4f" % (epoch + 1, loss / len(X_train)))
+            for batch_idx in range(num_batches):
+                batch_start = batch_idx * batch_size
+                batch_end = (batch_idx + 1) * batch_size
+                X_batch = X_train[batch_start:batch_end]
+                y_batch = y_train[batch_start:batch_end]
+                logits = self.forward(X_batch)
+                loss, dout = self.softmax_cross_entropy_with_logits(logits, y_batch)
+                acc = self.accuracy(logits, y_batch)
+                self.backward(dout, learning_rate)
+                if batch_idx % 100 == 0:
+                    print("Epoch {}, batch {}: loss {:.4f}, accuracy {:.2f}%".format(epoch + 1, batch_idx + 1, loss, acc * 100))
+
 
     # 预测标签
     def predict(self, input):
-        output = np.zeros((input.shape[0], 10))
-        for i in range(len(input)):
-            output[i] = self.forward(input[i])
+        output = self.forward(input)
         output = np.argmax(output, axis=1)
         return output
+
+    def evaluate(self, X, y):
+        logits = self.forward(X)
+        loss, _ = self.softmax_cross_entropy_with_logits(logits, y)
+        acc = self.accuracy(logits, y)
+        return loss, acc
+
+    def accuracy(self, logits, y):
+        preds = np.argmax(logits, axis=-1)
+        return np.mean(preds == y)
+
+    def softmax(self, x):
+        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
+
+    def softmax_cross_entropy_with_logits(self, logits, labels):
+        batch_size = logits.shape[0]
+        softmax_output = self.softmax(logits)
+        loss = -np.sum(np.log(softmax_output[np.arange(batch_size), labels])) / batch_size
+        dout = softmax_output.copy()
+        dout[np.arange(batch_size), labels] -= 1
+        dout /= batch_size
+        return loss, dout
 
 
 if __name__ == '__main__':
     # 加载 MNIST 数据集
     (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+    X_train = X_train.reshape(-1, 28, 28, 1)
+    X_test = X_test.reshape(-1, 28, 28, 1)
     X_train = X_train.astype('float32') / 255
     X_test = X_test.astype('float32') / 255
 
-    X_train = X_train[:50]
-    Y_train = Y_train[:50]
-    X_test = X_test[:15]
-    Y_test = Y_test[:15]
+    X_train = X_train[:1000]
+    Y_train = Y_train[:1000]
+    X_test = X_test[0:100]
+    Y_test = Y_test[0:100]
     print(X_train.shape, X_test.shape)
 
-    out_dim = len(set(Y_train))
     # 创建神经网络模型
     model = CNN()
-    model.add_layer(Convolution(5, 5))
+    model.add_layer(Convolution(kernel_size=(5, 5), kernel_num=5))
+    model.add_layer(ReLU())
+    model.add_layer(Convolution(kernel_size=(3, 3), kernel_num=10))
     model.add_layer(ReLU())
     model.add_layer(Flattening())
-    model.add_layer(FullyConnected(24 * 24 * 5, 64))
+    model.add_layer(FullyConnected(64))
     model.add_layer(ReLU())
-    model.add_layer(FullyConnected(64, out_dim))
+    model.add_layer(FullyConnected(10))
     model.add_layer(Softmax())
 
     # 在训练集上训练模型
-    model.train(X_train, Y_train, epochs=1, learning_rate=0.001)
+    model.train(X_train, Y_train, epochs=30, batch_size=32, learning_rate=0.001)
 
     # 在测试集上评估模型性能
     y_pred = model.predict(X_test)
-    # print(y_pred)
     accuracy = np.mean(y_pred == Y_test)
     print("Test accuracy: %.4f" % accuracy)
