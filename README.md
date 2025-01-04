@@ -10,6 +10,7 @@
 
 ```bash
 git clone https://gitee.com/yuluxingchen/AI.git
+git clone https://github.com/yuluxingchen/AI.git
 ```
 
 2.安装依赖项
