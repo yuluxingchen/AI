@@ -71,5 +71,31 @@ class ReLU(ActivationBase):
         return np.zeros_like(x)  # 输出一个零矩阵
 
 
-if __name__ == '__main__':
-    print("Hello World!")
+class LeakyRelu(ActivationBase):
+    def __init__(self, alpha=0.01):
+        super(LeakyRelu, self).__init__()
+        self.alpha = alpha
+
+    def fn(self, x):
+        """
+            f(x) = {
+                    x, x>0
+                    alpha * x, x<=0 (alpha < 1)
+                    }
+        """
+        return np.where(x > 0, x, x * self.alpha)
+
+    def grad(self, x, **kwargs):
+        """
+            f'(x) = {
+                    1, x>0
+                    alpha, x<=0
+                    }
+         """
+        return np.where(x > 0, 1, self.alpha)
+
+    def grad2(self, x):
+        """
+        f''(x) = 0
+        """
+        return np.zeros_like(x)  # 输出一个零矩阵
