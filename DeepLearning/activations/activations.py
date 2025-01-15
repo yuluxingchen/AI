@@ -24,8 +24,8 @@ class ActivationBase(ABC):
 
 
 class Sigmoid(ActivationBase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
 
     def __str__(self):
         return "Sigmoid"
@@ -47,7 +47,7 @@ class Sigmoid(ActivationBase):
 
 class ReLU(ActivationBase):
     def __init__(self):
-        super(ReLU, self).__init__()
+        super().__init__()
 
     def fn(self, x):
         """
@@ -73,7 +73,7 @@ class ReLU(ActivationBase):
 
 class LeakyRelu(ActivationBase):
     def __init__(self, alpha=0.01):
-        super(LeakyRelu, self).__init__()
+        super().__init__()
         self.alpha = alpha
 
     def fn(self, x):
