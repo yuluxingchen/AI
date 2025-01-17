@@ -4,13 +4,14 @@ from copy import deepcopy
 import numpy as np
 from numpy.linalg import norm
 
+from DeepLearning.initializers.initializers import SchedulerInitializer
 
 class OptimizerBase(ABC):
     def __init__(self, lr, scheduler=None):
         self.cache = {}
         self.cur_step = 0
         self.hyperparameters = {}
-        self.lr_scheduler = SchedulerInitializer(scheduler, lr)
+        self.lr_scheduler = SchedulerInitializer(scheduler, lr)()
 
     def __call__(self, param, param_grad, param_name, cur_loss=None):
         return self.update(param, param_grad, param_name, cur_loss)
