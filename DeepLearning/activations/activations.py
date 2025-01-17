@@ -1,5 +1,5 @@
-from math import erf
 from abc import ABC, abstractmethod
+
 import numpy as np
 
 
@@ -71,7 +71,7 @@ class ReLU(ActivationBase):
         return np.zeros_like(x)  # 输出一个零矩阵
 
 
-class LeakyRelu(ActivationBase):
+class LeakyReLU(ActivationBase):
     def __init__(self, alpha=0.01):
         super().__init__()
         self.alpha = alpha
@@ -99,3 +99,30 @@ class LeakyRelu(ActivationBase):
         f''(x) = 0
         """
         return np.zeros_like(x)  # 输出一个零矩阵
+
+
+class Affine(ActivationBase):
+    def __init__(self, slope=1, intercept=0):
+        super().__init__()
+        self.slope = slope
+        self.intercept = intercept
+
+    def __str__(self):
+        return "Affine(slope={}, intercept={})".format(self.slope, self.intercept)
+
+    def fn(self, x):
+        return self.slope * x + self.intercept
+
+    def grad(self, x, **kwargs):
+        return self.slope * np.ones_like(x)
+
+    def grad2(self, x):
+        return np.zeros_like(x)
+
+
+class Identity(Affine):
+    def __init__(self):
+        super().__init__(slope=1, intercept=0)
+
+    def __str__(self):
+        return "Identity(slope={}, intercept={})".format(self.slope, self.intercept)
