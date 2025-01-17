@@ -1,6 +1,8 @@
 import re
 from ast import literal_eval as _eval
+
 from DeepLearning.activations.activations import Identity, ActivationBase, Sigmoid, ReLU, Affine, LeakyReLU
+from DeepLearning.optimizers.optimizers import SGD, OptimizerBase
 from DeepLearning.schedulers.schedulers import SchedulerBase, ConstantScheduler
 
 
@@ -86,3 +88,47 @@ class SchedulerInitializer(object):
             raise NotImplementedError("{}".format(sc['id']))
         scheduler.set_param(sc)
         return scheduler
+
+
+class OptimizerInitializer(object):
+    def __init__(self, param=None):
+        self.param = param
+
+    def __call__(self):
+        param = self.param
+        if param is None:
+            opt = SGD()
+        elif isinstance(param, OptimizerBase):
+            opt = param
+        elif isinstance(param, str):
+            opt = self.init_from_str()
+        elif isinstance(param, dict):
+            opt = self.init_from_dict()
+        else:
+            raise ValueError("{} is not exist".format(param))
+        return opt
+
+    def init_from_str(self):
+        r = r"([a-zA-Z]*)=([^,)]*)"
+        opt_str = self.param.lower()
+        kwargs = {i: _eval(j) for i, j in re.findall(r, opt_str)}
+        if "sgd" in opt_str:
+            optimizer = SGD(**kwargs)
+        else:
+            raise NotImplementedError("{} is not exist".format(opt_str))
+        return optimizer
+
+    def init_from_dict(self):
+        D = self.param
+        cc = D["cache"] if "cache" in D else None
+        op = D["hyperparameters"] if "hyperparameters" in D else None
+
+        if op is None:
+            raise ValueError("`param` dictionary has no `hyperparemeters` key")
+
+        if op["id"] == "SGD":
+            optimizer = SGD()
+        else:
+            raise NotImplementedError("{}".format(op["id"]))
+        optimizer.set_params(op, cc)
+        return optimizer
