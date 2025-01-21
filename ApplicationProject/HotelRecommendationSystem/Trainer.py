@@ -58,7 +58,7 @@ class Trainer:
 
         model = self.model.to(device)
 
-        min_acc = 0
+        max_acc = 0
         for t in range(epochs):
             print(f"epoch{t + 1}\n---------------")
             train_loss, train_acc = self.train(train_dataloader, model, self.loss_fn, self.optimizer)
@@ -70,11 +70,11 @@ class Trainer:
             self.loss_val.append(val_loss)
             self.acc_val.append(val_acc)
 
-            if val_acc > min_acc:
+            if val_acc > max_acc:
                 folder = 'save_model'
                 if not os.path.exists(folder):
                     os.mkdir('save_model')
-                min_acc = val_acc
+                max_acc = val_acc
                 print(f"save the best model, epoch{t + 1}")
                 torch.save(model.state_dict(), 'save_model/best_model.pth')
             if t == epochs - 1:
