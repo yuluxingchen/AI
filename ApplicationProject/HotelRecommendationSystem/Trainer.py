@@ -87,7 +87,7 @@ class Trainer:
             output = model(x)
             cur_loss = loss_fn(output, y)
             _, pred = torch.max(output, dim=1)
-            cur_acc = np.sum(y == pred) / output.shape[0]
+            cur_acc = torch.sum(y == pred) / output.shape[0]
 
             optimizer.zero_grad()
             cur_loss.backward()
@@ -108,7 +108,7 @@ class Trainer:
             output = model(image)
             cur_loss = loss_fn(output, y)
             _, pred = torch.max(output, dim=1)
-            cur_acc = np.sum(y == pred) / output.shape[0]
+            cur_acc = torch.sum(y == pred) / output.shape[0]
 
             optimizer.zero_grad()
             cur_loss.backward()
