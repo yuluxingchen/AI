@@ -9,7 +9,7 @@ class DataLoader:
         self.processing = processing
 
     def dataset_split(self, test_size=0.25, random_state=None):
-        dataset, label = self.processing.pre_processing()
+        dataset, label = self.processing.pre_processing()  # 数据预处理过程
         X = pd.concat(dataset, axis=1)
         y = label
 
@@ -45,6 +45,6 @@ if __name__ == '__main__':
     if X_train.isna().any().any():
         print("数据中包含无效值")
         raise ValueError
-    if X_train.applymap(np.isinf).any().any():
+    if X_train.map(np.isinf).any().any():
         print("数据中包含无穷大值")
         raise ValueError

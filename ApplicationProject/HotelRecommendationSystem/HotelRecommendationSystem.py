@@ -16,8 +16,11 @@ if __name__ == '__main__':
 
     model = TextNet()
     trainer = Trainer(model)
+    # 对训练器进行配置
     trainer.compile()
+    # 进行拟合训练
     trainer.fit(X_train, y_train, epochs=30)
+    # 展示结果
     trainer.show()
 
     model_path = 'save_model/best_model.pth'
