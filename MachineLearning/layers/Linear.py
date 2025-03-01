@@ -17,7 +17,7 @@ class Linear(BaseLayer):
 
     def backward(self, grad):
         dw = np.dot(grad, self.input.T)
-        db = np.sum(grad, keepdims=True)
+        db = np.sum(grad, axis=1, keepdims=True)
         grad = np.dot(self.w.T, grad)
         return dw, db, grad
 

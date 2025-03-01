@@ -10,6 +10,6 @@ if __name__ == '__main__':
     model = MLP()
     model.compiler(learning_rate=0.3)
     model.train(X, Y, epochs=1001, layer_num=4)
-    y_pred = model.forward(X)
+    y_pred = model.forward(X).T
     print("Predictions:")
     print((y_pred >= 0.5).astype(int))
