@@ -4,8 +4,12 @@ from MachineLearning.activations.BaseActivation import BaseActivation
 
 
 class Sigmoid(BaseActivation):
+    def __init__(self):
+        self.output = None
     def forward(self, x):
-        return 1 / (1 + np.exp(-x))
+        self.output = 1 / (1 + np.exp(-x))
+        return self.output
 
-    def backward(self, out):
-        return out * (1 - out)
+    def backward(self, grad):
+        out = self.output
+        return grad * out * (1 - out)

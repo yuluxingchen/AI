@@ -5,7 +5,7 @@ from MachineLearning.losses.BaseLoss import BaseLoss
 
 class MSE(BaseLoss):
     def forward(self, output, Y):
-        return 0.5 * np.mean((output - Y) ** 2)
+        return np.mean((output - Y) ** 2)
 
     def backward(self, output, Y):
-        return (output - Y) / Y.size
+        return (output - Y) / Y.shape[0]
